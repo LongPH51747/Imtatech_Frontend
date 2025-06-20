@@ -8,6 +8,7 @@ import {
 import Header from '../components/Header';
 import CartItem from '../components/CartItem';
 import CheckoutFooter from '../components/CheckOutFooter';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const CartScreen = () => {
     const [cartItems, setCartItems] = useState([
@@ -102,7 +103,11 @@ const CartScreen = () => {
             checked: false,
         },
     ]);
-
+    // Thêm state cho modal xác nhận xoá
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [deleteItemId, setDeleteItemId] = useState(null);
+    const [deleteAll, setDeleteAll] = useState(false);
+    const hasCheckedItem = cartItems.some(item => item.checked);
     // 👉 Hàm xử lý số lượng, xoá, chọn
     const handleIncrease = (id) => {
         setCartItems(prev =>
@@ -122,8 +127,39 @@ const CartScreen = () => {
         );
     };
 
+    // Sửa hàm handleDelete: chỉ mở modal, chưa xoá ngay
     const handleDelete = (id) => {
-        setCartItems(prev => prev.filter(item => item.id !== id));
+        setDeleteItemId(id);
+        setDeleteAll(false);
+        setDeleteModalVisible(true);
+    };
+
+    // Khi bấm xoá tất cả
+    const handleDeleteAll = () => {
+        if (cartItems.length === 0) {
+            return; // Không làm gì nếu giỏ hàng rỗng
+        }
+        setDeleteAll(true);
+        setDeleteModalVisible(true);
+    };
+
+    // Xác nhận xoá
+    const confirmDelete = () => {
+        if (deleteAll) {
+            setCartItems([]); // Xoá tất cả
+        } else {
+            setCartItems(prev => prev.filter(item => item.id !== deleteItemId)); // Xoá 1 item
+        }
+        setDeleteModalVisible(false);
+        setDeleteItemId(null);
+        setDeleteAll(false);
+    };
+
+    // Huỷ xoá
+    const cancelDelete = () => {
+        setDeleteModalVisible(false);
+        setDeleteItemId(null);
+        setDeleteAll(false);
     };
 
     const handleToggleCheck = (id) => {
@@ -156,23 +192,32 @@ const CartScreen = () => {
             <Header
                 title="Giỏ hàng"
                 onBackPress={() => { }}
-                onDeletePress={() => { }}
+                onDeletePress={handleDeleteAll} // <-- Sửa ở đây
             />
             <View style={{ flex: 1 }}>
                 <FlatList
                     data={cartItems}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 16 }}
+                    contentContainerStyle={{ paddingBottom: hasCheckedItem ? 16 : 0 }}
                     showsVerticalScrollIndicator={false}
                 />
-                <CheckoutFooter
-                    total={total}
-                    onCheckout={() => {
-                        console.log('Thanh toán', total);
-                    }}
-                />
+                {hasCheckedItem && (
+                    <CheckoutFooter
+                        total={total}
+                        onCheckout={() => {
+                            console.log('Thanh toán', total);
+                        }}
+                    />
+                )}
             </View>
+            <ConfirmDeleteModal
+                visible={deleteModalVisible}
+                onConfirm={confirmDelete}
+                onCancel={cancelDelete}
+                title={deleteAll ? "Xác nhận xoá tất cả?" : "Xác nhận xoá sản phẩm?"}
+                message={deleteAll ? "Bạn có chắc chắn muốn xoá tất cả sản phẩm khỏi giỏ hàng?" : "Bạn có chắc chắn muốn xoá sản phẩm này khỏi giỏ hàng?"}
+            />
         </SafeAreaView>
     );
 };
