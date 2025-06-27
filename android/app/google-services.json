@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "496284280437",
+    "project_id": "imtatech-project",
+    "storage_bucket": "imtatech-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496284280437:android:20b7642433488fa22cba3c",
+        "android_client_info": {
+          "package_name": "com.imtatech_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoY_5CZmme4VUDota3wig3-hAwjs5DCno"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
