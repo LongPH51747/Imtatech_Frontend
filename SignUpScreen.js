@@ -11,75 +11,45 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
+  Image,
   StyleSheet,
-  TouchableOpacity,
-  Alert,
+  StatusBar,
+  Text,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import WrapTextInput from './customcomponent/wrapinput';
+import Title from './customcomponent/title';
+import ButtonForm from './customcomponent/form';
+import { apiRegister, BASE_URL } from './api';
 
 const SignUpScreen = (props) => {
   const navigation = props.navigation || { navigate: () => {}, replace: () => {} };
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleRegister = async () => {
+    if (!email || !name || !password || !confirmPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
-
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
-      return;
-    }
-
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Lỗi', 'Mật khẩu không khớp');
       return;
     }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-
-      // Save user info to AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-      }));
-
-      Alert.alert('Success', 'Account created successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Home'),
-        },
-      ]);
+      const res = await apiRegister(name, email, password);
+      Alert.alert('Thành công', 'Đăng ký thành công!');
+      navigation.navigate('Login');
     } catch (error) {
-      console.log('SignUp error:', error);
-      let errorMessage = 'An error occurred during sign up';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered';
-      }
-      Alert.alert('Error', errorMessage + (error.message ? `\n${error.message}` : ''));
+      console.log('Register error:', error, error?.response?.data);
+      Alert.alert('Lỗi', error.response?.data?.message || 'Đăng ký thất bại');
     } finally {
       setLoading(false);
     }
@@ -90,54 +60,42 @@ const SignUpScreen = (props) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <StatusBar backgroundColor="transparent" translucent barStyle="default" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Image source={require('./img/imagelogin.png')} style={styles.image} />
         <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
-
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleSignUp}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Creating Account...' : 'Sign Up'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.footerLink}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
+          <Title title="Đăng ký" subtitle="Tạo tài khoản" />
+          <WrapTextInput
+            placeholder="Email"
+            onchangeText={setEmail}
+            value={email}
+            icon={''}
+          />
+          <WrapTextInput
+            placeholder="Họ tên"
+            onchangeText={setName}
+            value={name}
+            icon={''}
+          />
+          <WrapTextInput
+            placeholder="Nhập password"
+            onchangeText={setPassword}
+            value={password}
+            icon={''}
+          />
+          <WrapTextInput
+            placeholder="Nhập lại password"
+            onchangeText={setConfirmPassword}
+            value={confirmPassword}
+            icon={''}
+          />
+          <ButtonForm
+            onPress={handleRegister}
+            onPressRegister={() => navigation.navigate('Login')}
+            title={loading ? 'Đang đăng ký...' : 'Đăng ký'}
+            text={'Tôi đã có tài khoản'}
+            subtitle={'Đăng nhập'}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -145,71 +103,10 @@ const SignUpScreen = (props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  form: {
-    marginBottom: 24,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#666',
-    fontSize: 16,
-  },
-  footerLink: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  container: { backgroundColor: 'transparent', flex: 1 },
+  image: { width: '100%', height: 350, marginTop: -150 },
+  content: { padding: 24, justifyContent: 'center' },
+  scrollContent: { flexGrow: 1 },
 });
 
 export default SignUpScreen; 

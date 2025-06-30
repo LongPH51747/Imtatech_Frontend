@@ -1,12 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import React from 'react'
-import LoginScreen from './LoginScreen'
-import SignUpScreen from './SignUpScreen'
-import ChangePasswordScreen from './ChangePasswordScreen'
+import AppNavigator from './AppNavigator'
+
 const App = () => {
   return (
-   
-      <LoginScreen/>
+    <AppNavigator />
   )
 }
 

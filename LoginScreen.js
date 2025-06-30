@@ -12,17 +12,20 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
+  Image,
   StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
+  StatusBar,
+  Text,
   Alert,
   Modal,
   Button,
+  SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import WrapTextInput from './customcomponent/wrapinput';
+import Title from './customcomponent/title';
+import ButtonForm from './customcomponent/form';
+import { apiLogin, apiForgotPassword, BASE_URL } from './api';
 
 const LoginScreen = (props) => {
   const [email, setEmail] = useState('');
@@ -30,7 +33,6 @@ const LoginScreen = (props) => {
   const [loading, setLoading] = useState(false);
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
-
   const navigation = props.navigation || { navigate: () => {}, replace: () => {} };
 
   const handleLogin = async () => {
@@ -40,26 +42,11 @@ const LoginScreen = (props) => {
     }
     setLoading(true);
     try {
-      const userCredential = await auth().signInWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-      await AsyncStorage.setItem('user', JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-      }));
-      Alert.alert('Thành công', 'Đăng nhập thành công!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.replace('Home'),
-        },
-      ]);
+      const res = await apiLogin(email, password);
+      Alert.alert('Thành công', 'Đăng nhập thành công!');
+      navigation.navigate('Home');
     } catch (error) {
-      let errorMessage = 'Đăng nhập thất bại';
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'Không tìm thấy tài khoản';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Sai mật khẩu';
-      }
-      Alert.alert('Lỗi', errorMessage);
+      Alert.alert('Lỗi', error.response?.data?.message || 'Đăng nhập thất bại');
     } finally {
       setLoading(false);
     }
@@ -71,52 +58,43 @@ const LoginScreen = (props) => {
       return;
     }
     try {
-      const result = await auth().sendPasswordResetEmail(forgotEmail);
-      console.log('Password reset email sent result:', result);
+      const result = await apiForgotPassword(forgotEmail);
       Alert.alert('Thành công', 'Đã gửi email đặt lại mật khẩu!');
       setForgotModalVisible(false);
       setForgotEmail('');
     } catch (error) {
-      console.log('Forgot password error:', error);
-      Alert.alert('Lỗi', error.message);
+      Alert.alert('Lỗi', error.response?.data?.message || error.message);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor="transparent" translucent barStyle="default" />
+      <Image source={require('./img/imagelogin.png')} style={styles.image} />
       <View style={styles.content}>
-        <Text style={styles.title}>Đăng nhập</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
+        <Title title="Chào mừng bạn" subtitle="Đăng nhập tài khoản" />
+        <WrapTextInput
+          placeholder="Nhập email"
+          onchangeText={setEmail}
           value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
+          icon={''}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Mật khẩu"
+        <WrapTextInput
+          placeholder="Nhập password"
+          onchangeText={setPassword}
           value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          icon={''}
         />
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
-          <Text style={{ color: '#007AFF', textAlign: 'center', marginBottom: 16 }}>Quên mật khẩu?</Text>
+          <Text style={{ color: '#007AFF', textAlign: 'right', marginBottom: 16 }}>Quên mật khẩu?</Text>
         </TouchableOpacity>
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.footerLink}>Đăng ký</Text>
-          </TouchableOpacity>
-        </View>
+        <ButtonForm
+          onPress={handleLogin}
+          onPressRegister={() => navigation.navigate('SignUp')}
+          title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          text={'Bạn không có tài khoản'}
+          subtitle={'Tạo tài khoản'}
+        />
       </View>
       {/* Modal Quên mật khẩu */}
       <Modal
@@ -128,13 +106,11 @@ const LoginScreen = (props) => {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
           <View style={{ backgroundColor: '#fff', padding: 24, borderRadius: 8, width: '80%' }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Quên mật khẩu</Text>
-            <TextInput
-              style={styles.input}
+            <WrapTextInput
               placeholder="Nhập email của bạn"
+              onchangeText={setForgotEmail}
               value={forgotEmail}
-              onChangeText={setForgotEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
+              icon={''}
             />
             <Button title="Gửi email đặt lại mật khẩu" onPress={handleForgotPassword} />
             <Button title="Đóng" color="#888" onPress={() => setForgotModalVisible(false)} />
@@ -146,60 +122,9 @@ const LoginScreen = (props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
-  content: {
-    padding: 24,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#666',
-    fontSize: 16,
-  },
-  footerLink: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  container: { backgroundColor: 'transparent', flex: 1 },
+  image: { width: '100%', height: 350, marginTop: -50 },
+  content: { padding: 24, justifyContent: 'center' },
 });
 
 export default LoginScreen; 
