@@ -26,13 +26,13 @@ import WrapTextInput from './customcomponent/wrapinput';
 import Title from './customcomponent/title';
 import ButtonForm from './customcomponent/form';
 import { apiLogin, apiForgotPassword, BASE_URL } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import auth from '@react-native-firebase/auth';
 
 const LoginScreen = (props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [forgotModalVisible, setForgotModalVisible] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
   const navigation = props.navigation || { navigate: () => {}, replace: () => {} };
 
   const handleLogin = async () => {
@@ -43,8 +43,12 @@ const LoginScreen = (props) => {
     setLoading(true);
     try {
       const res = await apiLogin(email, password);
+      console.log('Login response:', res);
+      if (res.data && res.data.token) {
+        await AsyncStorage.setItem('token', res.data.token);
+      }
       Alert.alert('Thành công', 'Đăng nhập thành công!');
-      navigation.navigate('Home');
+      navigation.replace('MainTab');
     } catch (error) {
       Alert.alert('Lỗi', error.response?.data?.message || 'Đăng nhập thất bại');
     } finally {
@@ -52,24 +56,9 @@ const LoginScreen = (props) => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!forgotEmail) {
-      Alert.alert('Lỗi', 'Vui lòng nhập email');
-      return;
-    }
-    try {
-      const result = await apiForgotPassword(forgotEmail);
-      Alert.alert('Thành công', 'Đã gửi email đặt lại mật khẩu!');
-      setForgotModalVisible(false);
-      setForgotEmail('');
-    } catch (error) {
-      Alert.alert('Lỗi', error.response?.data?.message || error.message);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="transparent" translucent barStyle="default" />
+      <StatusBar backgroundColo12r="transparent" translucent barStyle="default" />
       <Image source={require('./img/imagelogin.png')} style={styles.image} />
       <View style={styles.content}>
         <Title title="Chào mừng bạn" subtitle="Đăng nhập tài khoản" />
@@ -81,13 +70,12 @@ const LoginScreen = (props) => {
         />
         <WrapTextInput
           placeholder="Nhập password"
+          keyboardType="visible-password"
+          secureTextEntry={true}
           onchangeText={setPassword}
           value={password}
           icon={''}
         />
-        <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
-          <Text style={{ color: '#007AFF', textAlign: 'right', marginBottom: 16 }}>Quên mật khẩu?</Text>
-        </TouchableOpacity>
         <ButtonForm
           onPress={handleLogin}
           onPressRegister={() => navigation.navigate('SignUp')}
@@ -96,27 +84,6 @@ const LoginScreen = (props) => {
           subtitle={'Tạo tài khoản'}
         />
       </View>
-      {/* Modal Quên mật khẩu */}
-      <Modal
-        visible={forgotModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setForgotModalVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-          <View style={{ backgroundColor: '#fff', padding: 24, borderRadius: 8, width: '80%' }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Quên mật khẩu</Text>
-            <WrapTextInput
-              placeholder="Nhập email của bạn"
-              onchangeText={setForgotEmail}
-              value={forgotEmail}
-              icon={''}
-            />
-            <Button title="Gửi email đặt lại mật khẩu" onPress={handleForgotPassword} />
-            <Button title="Đóng" color="#888" onPress={() => setForgotModalVisible(false)} />
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };

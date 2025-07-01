@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, Button, Image, Modal, TextInput, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiGetProfile } from './api';
+import { apiGetProfile, apiChangePassword, apiUpdateProfile } from './api';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
+
+import { BASE_URL } from './api';
 
 const ProfileScreen = ({ navigation }) => {
   const [profile, setProfile] = useState(null);
@@ -11,28 +15,36 @@ const ProfileScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loadingChange, setLoadingChange] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        // Lấy token từ AsyncStorage hoặc props tuỳ bạn lưu
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          Alert.alert('Lỗi', 'Bạn cần đăng nhập');
-          navigation.replace('Login');
-          return;
-        }
-        const res = await apiGetProfile(token);
-        setProfile(res.data);
-      } catch (error) {
-        Alert.alert('Lỗi', error.response?.data?.message || 'Không thể lấy thông tin cá nhân');
+  const fetchProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      console.log('Token from AsyncStorage:', token);
+      if (!token) {
+        Alert.alert('Lỗi', 'Bạn cần đăng nhập');
         navigation.replace('Login');
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    fetchProfile();
-  }, []);
+      const res = await apiGetProfile(token);
+      console.log('Profile API response:', res.data);
+      setProfile(res.data);
+    } catch (error) {
+      console.log('Error fetching profile:', error, error?.response?.data);
+      Alert.alert('Lỗi', error.response?.data?.message || 'Không thể lấy thông tin cá nhân');
+      navigation.replace('Login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      fetchProfile();
+    }, [])
+  );
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -49,21 +61,32 @@ const ProfileScreen = ({ navigation }) => {
     }
     setLoadingChange(true);
     try {
-      // Gọi API đổi mật khẩu ở đây nếu có, hoặc dùng firebase nếu backend hỗ trợ
-      // Ví dụ: await apiChangePassword(token, oldPassword, newPassword)
-      // Ở đây chỉ demo thành công
-      setTimeout(() => {
-        setLoadingChange(false);
-        setShowChangePassword(false);
-        setOldPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        Alert.alert('Thành công', 'Đổi mật khẩu thành công!');
-      }, 1000);
+      const token = await AsyncStorage.getItem('token');
+      await apiChangePassword(token, oldPassword, newPassword);
+      setShowChangePassword(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      Alert.alert('Thành công', 'Đổi mật khẩu thành công!');
     } catch (error) {
       Alert.alert('Lỗi', error.response?.data?.message || 'Đổi mật khẩu thất bại');
     } finally {
       setLoadingChange(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await apiUpdateProfile(token, { name: editName });
+      setShowEditModal(false);
+      fetchProfile(); // reload lại profile
+      Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
+    } catch (error) {
+      Alert.alert('Lỗi', error.response?.data?.message || 'Cập nhật thất bại');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +127,7 @@ const ProfileScreen = ({ navigation }) => {
         await AsyncStorage.removeItem('token');
         navigation.replace('Login');
       }} />
+      <Button title="Cập nhật tên" onPress={() => { setEditName(profile.name); setShowEditModal(true); }} />
       {/* Modal đổi mật khẩu */}
       <Modal
         visible={showChangePassword}
@@ -143,6 +167,23 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.buttonText}>{loadingChange ? 'Đang đổi...' : 'Đổi mật khẩu'}</Text>
             </TouchableOpacity>
             <Button title="Đóng" color="#888" onPress={() => setShowChangePassword(false)} />
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={showEditModal} transparent animationType="slide" onRequestClose={() => setShowEditModal(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.title}>Cập nhật tên</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Tên mới"
+              value={editName}
+              onChangeText={setEditName}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+              <Text style={styles.buttonText}>Cập nhật</Text>
+            </TouchableOpacity>
+            <Button title="Đóng" color="#888" onPress={() => setShowEditModal(false)} />
           </View>
         </View>
       </Modal>

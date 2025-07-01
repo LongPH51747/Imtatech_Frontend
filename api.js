@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const BASE_URL = 'https://6144-2405-4802-473-7f0-e5ec-22b8-6085-8361.ngrok-free.app'; // Thay bằng URL backend thật
+export const BASE_URL = 'https://efd5-42-116-197-106.ngrok-free.app'; // Thay bằng URL backend thật
 
 export const apiRegister = (name, email, password) =>
   axios.post(`${BASE_URL}/api/users/register`, { name, email, password });
@@ -35,4 +35,19 @@ export const apiGetProfile = (token) =>
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  }); 
+  });
+
+export const apiUpdateProfile = (token, profileData) =>
+  axios.put(`${BASE_URL}/api/users/profile`, profileData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const apiChangePassword = async (token, oldPassword, newPassword) => {
+  return axios.post(
+    `${BASE_URL}/api/users/change-password`,
+    { oldPassword, newPassword },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}; 
