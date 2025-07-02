@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { apiSearchProducts, apiGetRecommendedProducts, apiGetAllProducts, BASE_URL } from './api';
-import ListItem from './customcomponent/listitem';
+import { apiSearchProducts, apiGetRecommendedProducts, apiGetAllProducts, BASE_URL } from '../api';
+import ListItem from '../customcomponent/listitem';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;

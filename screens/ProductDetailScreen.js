@@ -9,11 +9,11 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { BASE_URL } from './api';
+import { BASE_URL } from '../api';
 
 const getImageSource = (img) => {
   if (!img) {
-    return require('./img/placeholder.webp');
+    return require('../img/placeholder.webp');
   }
   
   if (typeof img === 'string') {
@@ -25,7 +25,7 @@ const getImageSource = (img) => {
     }
   }
   
-  return require('./img/placeholder.webp');
+  return require('../img/placeholder.webp');
 };
 
 const ProductDetailScreen = ({ route, navigation }) => {
@@ -52,7 +52,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         source={getImageSource(product.image)}
         style={styles.productImage}
         resizeMode="cover"
-        defaultSource={require('./img/placeholder.webp')}
+        defaultSource={require('../img/placeholder.webp')}
       />
 
       {/* Product Info */}

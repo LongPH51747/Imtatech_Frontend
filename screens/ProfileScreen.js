@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, Button, Image, Modal, TextInput, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiGetProfile } from './api';
+import { apiGetProfile } from '../api';
 
 const ProfileScreen = ({ navigation }) => {
   const [profile, setProfile] = useState(null);
@@ -87,7 +87,7 @@ const ProfileScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.avatarContainer}>
         <Image
-          source={profile.avatar ? { uri: profile.avatar } : require('./img/avata.png')}
+          source={profile.avatar ? { uri: profile.avatar } : require('../img/avata.png')}
           style={styles.avatar}
         />
         <Text style={styles.name}>{profile.name}</Text>

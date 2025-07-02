@@ -20,10 +20,10 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import WrapTextInput from './customcomponent/wrapinput';
-import Title from './customcomponent/title';
-import ButtonForm from './customcomponent/form';
-import { apiRegister, BASE_URL } from './api';
+import WrapTextInput from '../customcomponent/wrapinput';
+import Title from '../customcomponent/title';
+import ButtonForm from '../customcomponent/form';
+import { apiRegister, BASE_URL } from '../api';
 
 const SignUpScreen = (props) => {
   const navigation = props.navigation || { navigate: () => {}, replace: () => {} };
@@ -62,7 +62,7 @@ const SignUpScreen = (props) => {
     >
       <StatusBar backgroundColor="transparent" translucent barStyle="default" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Image source={require('./img/imagelogin.png')} style={styles.image} />
+        <Image source={require('../img/imagelogin.png')} style={styles.image} />
         <View style={styles.content}>
           <Title title="Đăng ký" subtitle="Tạo tài khoản" />
           <WrapTextInput

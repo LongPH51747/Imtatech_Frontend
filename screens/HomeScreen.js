@@ -8,9 +8,9 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import ListItem from "./customcomponent/listitem";
-import Header from "./customcomponent/header";
-import { apiGetAllProducts } from "./api";
+import ListItem from "../customcomponent/listitem";
+import Header from "../customcomponent/header";
+import { apiGetAllProducts } from "../api";
 
 export default function Home({ navigation }) {
   const [products, setProducts] = useState([]);
@@ -45,7 +45,7 @@ export default function Home({ navigation }) {
       <View style={{ position: 'relative', backgroundColor: '#fff', paddingBottom: 16 ,marginTop:30}}>
         {/* Banner image lower */}
         <Image
-          source={require('./img/image_9.png')}
+          source={require('../img/image_9.png')}
           style={{ width: '100%', height: 230, resizeMode: 'cover', }}
         />
         {/* Overlay slogan, button, and cart icon */}
@@ -61,7 +61,7 @@ export default function Home({ navigation }) {
             style={{ position: 'absolute', top: 8, right: 16, backgroundColor: '#fff', borderRadius: 20, padding: 8, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
             onPress={() => navigation.navigate('Cart')}
           >
-            <Image source={require('./img/shopping-cart.png')} style={{ width: 28, height: 28 }} />
+            <Image source={require('../img/shopping-cart.png')} style={{ width: 28, height: 28 }} />
           </TouchableOpacity>
         </View>
       </View>

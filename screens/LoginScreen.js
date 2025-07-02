@@ -1,12 +1,5 @@
 /**
- * Màn hình Đăng nhập (Login Screen)
- * 
- * Màn hình này cho phép người dùng đăng nhập với các chức năng:
- * - Đăng nhập bằng số điện thoại và OTP
- * - Đăng nhập bằng Google
- * - Xác thực người dùng
- * - Lưu thông tin đăng nhập
- * - Chuyển hướng đến màn hình Home sau khi đăng nhập thành công
+ * Màn hình Đăng nhập (Login Screen) - Đã được nâng cấp để dùng AuthContext
  */
 
 import React, { useState } from 'react';
@@ -22,37 +15,45 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import WrapTextInput from './customcomponent/wrapinput';
-import Title from './customcomponent/title';
-import ButtonForm from './customcomponent/form';
-import { apiLogin, apiForgotPassword, BASE_URL } from './api';
+import WrapTextInput from '../customcomponent/wrapinput';
+import Title from '../customcomponent/title';
+import ButtonForm from '../customcomponent/form';
+// --- THAY ĐỔI 1: Chỉ import apiForgotPassword vì apiLogin đã được gọi trong Context ---
+import { apiForgotPassword } from '../api'; 
+// --- THAY ĐỔI 2: Import hook useAuth ---
+import { useAuth } from '../context/AuthContext'; 
 
 const LoginScreen = (props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const navigation = props.navigation || { navigate: () => {}, replace: () => {} };
 
+  // --- THAY ĐỔI 3: Lấy hàm login và trạng thái isLoading từ AuthContext ---
+  const { login, isLoading } = useAuth();
+  // Dòng state `const [loading, setLoading] = useState(false);` không còn cần thiết.
+
+  // --- THAY ĐỔI 4: VIẾT LẠI HOÀN TOÀN HÀM handleLogin ---
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
-    setLoading(true);
+    
     try {
-      const res = await apiLogin(email, password);
-      Alert.alert('Thành công', 'Đăng nhập thành công!');
-      navigation.navigate('Home');
+      // Gọi hàm login từ context. Mọi logic phức tạp đã nằm trong đó.
+      await login(email, password);
+      // **Không cần Alert và không cần navigation.navigate ở đây nữa.**
+      // Việc chuyển màn hình sẽ được xử lý tự động bởi AppNavigator.
     } catch (error) {
-      Alert.alert('Lỗi', error.response?.data?.message || 'Đăng nhập thất bại');
-    } finally {
-      setLoading(false);
+      // Nếu hàm login trong context thất bại, nó sẽ ném lỗi ra đây.
+      Alert.alert('Đăng nhập thất bại', 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
     }
   };
 
   const handleForgotPassword = async () => {
+    // Hàm này không thay đổi vì nó không liên quan đến trạng thái đăng nhập
     if (!forgotEmail) {
       Alert.alert('Lỗi', 'Vui lòng nhập email');
       return;
@@ -70,7 +71,7 @@ const LoginScreen = (props) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="transparent" translucent barStyle="default" />
-      <Image source={require('./img/imagelogin.png')} style={styles.image} />
+      <Image source={require('../img/imagelogin.png')} style={styles.image} />
       <View style={styles.content}>
         <Title title="Chào mừng bạn" subtitle="Đăng nhập tài khoản" />
         <WrapTextInput
@@ -91,12 +92,13 @@ const LoginScreen = (props) => {
         <ButtonForm
           onPress={handleLogin}
           onPressRegister={() => navigation.navigate('SignUp')}
-          title={loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          // --- THAY ĐỔI 5: Sử dụng `isLoading` từ context thay vì `loading` từ state ---
+          title={isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           text={'Bạn không có tài khoản'}
           subtitle={'Tạo tài khoản'}
         />
       </View>
-      {/* Modal Quên mật khẩu */}
+      {/* Modal Quên mật khẩu (giữ nguyên) */}
       <Modal
         visible={forgotModalVisible}
         transparent
@@ -127,4 +129,4 @@ const styles = StyleSheet.create({
   content: { padding: 24, justifyContent: 'center' },
 });
 
-export default LoginScreen; 
+export default LoginScreen;

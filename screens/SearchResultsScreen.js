@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { apiSearchProducts, BASE_URL } from './api';
-import ListItem from './customcomponent/listitem';
+import { apiSearchProducts, BASE_URL } from '../api';
+import ListItem from '../customcomponent/listitem';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
