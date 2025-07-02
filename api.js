@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const BASE_URL = 'http://192.168.1.105:5000'; // Thay bằng URL backend thật
+export const BASE_URL = 'http://192.168.1.41:5000'; // Thay bằng URL backend thật
 
 // --- API XÁC THỰC & SẢN PHẨM ---
 
