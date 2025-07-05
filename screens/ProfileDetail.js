@@ -1,9 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, Button, Image, Modal, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Button,
+  Image,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiGetProfile } from '../api';
+import { useAuth } from '../context/AuthContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileDetail = ({ navigation }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -11,12 +24,11 @@ const ProfileScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loadingChange, setLoadingChange] = useState(false);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Lấy token từ AsyncStorage hoặc props tuỳ bạn lưu
-        const token = await AsyncStorage.getItem('token');
         if (!token) {
           Alert.alert('Lỗi', 'Bạn cần đăng nhập');
           navigation.replace('Login');
@@ -49,9 +61,6 @@ const ProfileScreen = ({ navigation }) => {
     }
     setLoadingChange(true);
     try {
-      // Gọi API đổi mật khẩu ở đây nếu có, hoặc dùng firebase nếu backend hỗ trợ
-      // Ví dụ: await apiChangePassword(token, oldPassword, newPassword)
-      // Ở đây chỉ demo thành công
       setTimeout(() => {
         setLoadingChange(false);
         setShowChangePassword(false);
@@ -85,6 +94,16 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('MainTab', { screen: 'Profile' })}>
+          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Thông tin người dùng</Text>
+        <View style={{ width: 24, height: 24 }} />
+      </View>
+
+
       <View style={styles.avatarContainer}>
         <Image
           source={profile.avatar ? { uri: profile.avatar } : require('../img/avata.png')}
@@ -93,53 +112,40 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.name}>{profile.name}</Text>
         <Text style={styles.email}>{profile.email}</Text>
       </View>
+
       <View style={styles.infoContainer}>
-        <Text style={styles.label}>Vai trò: <Text style={styles.value}>{profile.role}</Text></Text>
-        <Text style={styles.label}>Trạng thái: <Text style={styles.value}>{profile.is_allowed ? 'Được phép' : 'Bị khoá'}</Text></Text>
-        <Text style={styles.label}>Ngày tạo: <Text style={styles.value}>{new Date(profile.createdAt).toLocaleString()}</Text></Text>
+        <Text style={styles.label}>
+          Vai trò: <Text style={styles.value}>{profile.role}</Text>
+        </Text>
+        <Text style={styles.label}>
+          Trạng thái: <Text style={styles.value}>{profile.is_allowed ? 'Được phép' : 'Bị khoá'}</Text>
+        </Text>
+        <Text style={styles.label}>
+          Ngày tạo: <Text style={styles.value}>{new Date(profile.createdAt).toLocaleString()}</Text>
+        </Text>
       </View>
+
       <Button title="Đổi mật khẩu" onPress={() => setShowChangePassword(true)} />
       <View style={{ height: 12 }} />
-      <Button title="Đăng xuất" color="#ff3b30" onPress={async () => {
-        await AsyncStorage.removeItem('token');
-        navigation.replace('Login');
-      }} />
+      <Button
+        title="Đăng xuất"
+        color="#ff3b30"
+        onPress={async () => {
+          await AsyncStorage.removeItem('userData');
+          await AsyncStorage.removeItem('userToken');
+          navigation.replace('Login');
+        }}
+      />
+
       {/* Modal đổi mật khẩu */}
-      <Modal
-        visible={showChangePassword}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowChangePassword(false)}
-      >
+      <Modal visible={showChangePassword} transparent animationType="slide" onRequestClose={() => setShowChangePassword(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.title}>Đổi mật khẩu</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu cũ"
-              value={oldPassword}
-              onChangeText={setOldPassword}
-              secureTextEntry
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu mới"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Xác nhận mật khẩu mới"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-            <TouchableOpacity
-              style={[styles.button, loadingChange && styles.buttonDisabled]}
-              onPress={handleChangePassword}
-              disabled={loadingChange}
-            >
+            <TextInput style={styles.input} placeholder="Mật khẩu cũ" value={oldPassword} onChangeText={setOldPassword} secureTextEntry />
+            <TextInput style={styles.input} placeholder="Mật khẩu mới" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+            <TextInput style={styles.input} placeholder="Xác nhận mật khẩu mới" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+            <TouchableOpacity style={[styles.button, loadingChange && styles.buttonDisabled]} onPress={handleChangePassword} disabled={loadingChange}>
               <Text style={styles.buttonText}>{loadingChange ? 'Đang đổi...' : 'Đổi mật khẩu'}</Text>
             </TouchableOpacity>
             <Button title="Đóng" color="#888" onPress={() => setShowChangePassword(false)} />
@@ -151,8 +157,20 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 24 },
+  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 20 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 20,
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
   avatarContainer: { alignItems: 'center', marginBottom: 32 },
   avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 16 },
   name: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
@@ -169,4 +187,4 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
-export default ProfileScreen; 
+export default ProfileDetail;

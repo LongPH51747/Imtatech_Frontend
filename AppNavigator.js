@@ -15,8 +15,13 @@ import SearchScreen from './screens/SearchScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignUpScreen from './screens/SignUpScreen';
-import ProfileScreen from './screens/ProfileScreen';
+import ProfileScreen from './screens/ProfileScreen.';
 import ChatScreen from './screens/ChatScreen';
+import CartScreen from './screens/cart/cartScreen';
+import CheckoutScreen from './screens/checkout/CheckoutScreen';
+import ProfileDetail from './screens/ProfileDetail';
+import OrderHistoryScreen from './screens/orderhistory/orderHistoryScreen';
+import DetailOrderScreen from './screens/orderhistory/detailorder';
 
 
 const Stack = createStackNavigator();
@@ -40,8 +45,8 @@ function MainTab() {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
-          }else if(route.name === 'Chat'){
-            iconName = focused ? 'message': 'message-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'message' : 'message-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -51,8 +56,8 @@ function MainTab() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name='Chat' component={ChatScreen}/>
-    
+      <Tab.Screen name='Chat' component={ChatScreen} />
+
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -83,6 +88,12 @@ export default function AppNavigator() {
             <Stack.Screen name="MainTab" component={MainTab} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
             <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
+            <Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="Detail" component={ProductDetailScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="DetailProfile" component={ProfileDetail} />
+            <Stack.Screen name="orderhistory" component={OrderHistoryScreen} />
+            <Stack.Screen name="DetailOrderScreen" component={DetailOrderScreen} />
             {/* Thêm các màn hình khác chỉ dành cho người đã đăng nhập ở đây */}
           </>
         ) : (

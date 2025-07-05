@@ -5,49 +5,50 @@ import { apiLogin } from '../api';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({children}) => {
+export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const loadAuthDataFromStorage = async() =>{
+        const loadAuthDataFromStorage = async () => {
             try {
                 const storedToken = await AsyncStorage.getItem('userToken');
                 const storedUser = await AsyncStorage.getItem('userData');
 
-                if(storedUser && storedToken){
+                if (storedUser && storedToken) {
                     setToken(storedToken);
                     setUser(JSON.parse(storedUser));
                 }
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu xác thực từ Storage:", error);
-            }finally{
+            } finally {
                 setIsLoading(false)
             }
         };
         loadAuthDataFromStorage();
     }, []);
 
-    const login = async(email, password) => {
+    const login = async (email, password) => {
         setIsLoading(true);
         try {
             const response = await apiLogin(email, password);
-            const {user: userData, token: userToken} = response.data;
+            const { user: userData, token: userToken } = response.data;
             setUser(userData);
             setToken(userToken);
 
             await AsyncStorage.setItem('userData', JSON.stringify(userData));
             await AsyncStorage.setItem('userToken', userToken);
         } catch (error) {
-             console.error("Lỗi đăng nhập trong AuthContext:", error);
-             throw error;
-        }finally{
+
+            console.error("Lỗi đăng nhập trong AuthContext:", error);
+            throw error;
+        } finally {
             setIsLoading(false);
         }
     };
 
-    const logout = async() => {
+    const logout = async () => {
         setIsLoading(true);
         setUser(null);
         setToken(null);
@@ -62,12 +63,12 @@ export const AuthProvider = ({children}) => {
         token,
         isLoading,
         isAuthenticated: !!token,
-        login, 
+        login,
         logout
     };
 
     return (
-        <AuthContext.Provider value= {value}>
+        <AuthContext.Provider value={value}>
 
             {children}
         </AuthContext.Provider>

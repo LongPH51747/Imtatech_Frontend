@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,19 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { BASE_URL } from '../api';
+import { addToCart } from '../redux/actions/cartAction';
+import { useAuth } from '../context/AuthContext';
+import { useDispatch } from 'react-redux';
 
 const getImageSource = (img) => {
   if (!img) {
     return require('../img/placeholder.webp');
   }
-  
+
   if (typeof img === 'string') {
     if (img.startsWith('/uploads_product/')) {
       return { uri: `${BASE_URL}${img}` };
@@ -24,74 +28,148 @@ const getImageSource = (img) => {
       return { uri: img };
     }
   }
-  
+
   return require('../img/placeholder.webp');
 };
 
 const ProductDetailScreen = ({ route, navigation }) => {
+  const dispatch = useDispatch();
+  const { user } = useAuth();
+  const [quantity, setQuantity] = useState(0);
   const { product } = route.params;
+
+  const handleIncrease = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const handleDecrease = () => {
+    setQuantity(prev => (prev > 0 ? prev - 1 : 0));
+  };
+  const handleAddToCart = () => {
+
+    const data = {
+      cartItem: {
+        id_product: product._id,
+        quantity: quantity,
+      }
+    };
+
+    dispatch(addToCart(user?._id, data))
+      .then(() => {
+        Alert.alert('Thành công', 'Đã thêm sản phẩm vào giỏ hàng!');
+      })
+      .catch((error) => {
+        Alert.alert('Lỗi', 'Không thể thêm sản phẩm. Vui lòng thử lại!');
+        console.error(error);
+      });
+  };
+
+  const totalPrice = quantity * (product.price || 0);
   console.log('Product detail data:', product);
-
   return (
-    <ScrollView style={styles.container}>
-      {/* Header with back button */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cartButton}>
-          <Icon name="cart-outline" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 150 }}>
+        {/* Header with back button */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cartButton}>
+            <Icon name="cart-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Product Image */}
-      <Image
-        source={getImageSource(product.image)}
-        style={styles.productImage}
-        resizeMode="cover"
-        defaultSource={require('../img/placeholder.webp')}
-      />
+        {/* Product Image */}
+        <Image
+          source={getImageSource(product.image)}
+          style={styles.productImage}
+          resizeMode="cover"
+          defaultSource={require('../img/placeholder.webp')}
+        />
 
-      {/* Product Info */}
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{product.name_Product}</Text>
-        <Text style={styles.productPrice}>{product.price?.toLocaleString('vi-VN')}đ</Text>
-        
-        <View style={styles.ratingContainer}>
-          <View style={styles.stars}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Icon
-                key={star}
-                name={star <= (product.rate || 0) ? "star" : "star-outline"}
-                size={20}
-                color="#FFD700"
-              />
-            ))}
-          </View>
-          <Text style={styles.ratingText}>
-            {product.rate || 0} ({product.sold || 0} đã bán)
+        {/* Product Info */}
+        <View style={styles.productInfo}>
+          <Text style={styles.productName}>{product.name_Product}</Text>
+          <Text style={styles.productPrice}>
+            {product.price?.toLocaleString('vi-VN')}đ
           </Text>
+
+          <View style={styles.ratingContainer}>
+            <View style={styles.stars}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Icon
+                  key={star}
+                  name={star <= (product.rate || 0) ? 'star' : 'star-outline'}
+                  size={20}
+                  color="#FFD700"
+                />
+              ))}
+            </View>
+            <Text style={styles.ratingText}>
+              {product.rate || 0} ({product.sold || 0} đã bán)
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Product Details */}
+          <View style={styles.detailsContainer}>
+            <DetailRow label="Xuất xứ" value={product.origin} />
+            <DetailRow label="Kích thước" value={product.size} />
+            <DetailRow label="Đặc tính" value={product.attribute} />
+            <DetailRow label="Kho" value={`${product.stock} sản phẩm`} />
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Fixed Bottom Bar */}
+      <View style={styles.bottomBar}>
+        {/* Dòng "Đã chọn X sản phẩm" */}
+        <Text style={styles.selectedText}>Đã chọn {quantity} sản phẩm</Text>
+
+        <View style={styles.controlRow}>
+          {/* Nhóm nút cộng/trừ */}
+          <View style={styles.quantityControl}>
+            <TouchableOpacity style={styles.qtyButton} onPress={handleDecrease}>
+              <Text style={styles.qtySymbol}>-</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.qtyNumber}>{quantity}</Text>
+
+            <TouchableOpacity style={styles.qtyButton} onPress={handleIncrease}>
+              <Text style={styles.qtySymbol}>+</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Nhóm tạm tính */}
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>Tạm tính</Text>
+            <Text style={styles.totalText}>
+              {totalPrice.toLocaleString('vi-VN')}đ
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Product Details */}
-        <View style={styles.detailsContainer}>
-          <DetailRow label="Xuất xứ" value={product.origin} />
-          <DetailRow label="Kích thước" value={product.size} />
-          <DetailRow label="Đặc tính" value={product.attribute} />
-          <DetailRow label="Kho" value={`${product.stock} sản phẩm`} />
-        </View>
-
-        {/* Add to Cart Button */}
-        <TouchableOpacity style={styles.addToCartButton}>
-          <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
+        {/* Nút chọn mua */}
+        <TouchableOpacity
+          style={[
+            styles.buyButton,
+            { backgroundColor: quantity > 0 ? '#2ecc71' : '#ccc' },
+          ]}
+          disabled={quantity === 0}
+          onPress={handleAddToCart}
+        >
+          <Text style={styles.buyButtonText}>Thêm vào giỏ hàng</Text>
         </TouchableOpacity>
+
       </View>
-    </ScrollView>
+
+
+    </View>
+
   );
 };
 
@@ -195,7 +273,86 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  }, bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 12,
+    borderTopWidth: 1,
+    borderColor: '#eee',
   },
+
+  selectedText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 8,
+  },
+
+  controlRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 10
+  },
+
+  qtyButton: {
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  qtySymbol: {
+    fontSize: 16,
+    color: '#000',
+  },
+
+  qtyNumber: {
+    marginHorizontal: 6,
+    fontSize: 14,
+  },
+
+  totalContainer: {
+    alignItems: 'flex-end',
+  },
+
+  totalLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+
+  totalText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+
+  buyButton: {
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  buyButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
+
 });
 
 export default ProductDetailScreen; 
