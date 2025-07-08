@@ -82,13 +82,12 @@ const LoginScreen = (props) => {
         />
         <WrapTextInput
           placeholder="Nhập password"
+          keyboardType="visible-password"
+          secureTextEntry={true}
           onchangeText={setPassword}
           value={password}
           icon={''}
         />
-        <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
-          <Text style={{ color: '#007AFF', textAlign: 'right', marginBottom: 16 }}>Quên mật khẩu?</Text>
-        </TouchableOpacity>
         <ButtonForm
           onPress={handleLogin}
           onPressRegister={() => navigation.navigate('SignUp')}
