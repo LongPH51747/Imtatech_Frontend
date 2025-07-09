@@ -5,7 +5,7 @@ const { width } = Dimensions.get('window');
 const numColumns = 2;
 const ITEM_WIDTH = width / numColumns - 24;
 
-const API_BASE_URL = 'https://6144-2405-4802-473-7f0-e5ec-22b8-6085-8361.ngrok-free.app';
+const API_BASE_URL = 'https://2230d387c90a.ngrok-free.app';
 
 const getImageSource = (img) => {
   if (!img) {
