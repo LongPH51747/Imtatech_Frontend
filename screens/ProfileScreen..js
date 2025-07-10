@@ -54,7 +54,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Item title="Xem thông tin" onPress={() => { navigation.replace('DetailProfile'); }} />
                 <Item title="Cẩm nang trồng cây" onPress={() => { }} />
                 <Item title="Đơn hàng của bạn" onPress={() => { navigation.navigate('orderhistory') }} />
-                <Item title="Q & A" onPress={() => { }} />
+                <Item title="Q & A" onPress={() => {navigation.navigate('ChatBotScreen') }} />
             </View>
 
             <View style={styles.section}>

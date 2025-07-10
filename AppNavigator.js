@@ -22,7 +22,7 @@ import CheckoutScreen from './screens/checkout/CheckoutScreen';
 import ProfileDetail from './screens/ProfileDetail';
 import OrderHistoryScreen from './screens/orderhistory/orderHistoryScreen';
 import DetailOrderScreen from './screens/orderhistory/detailorder';
-
+import ChatBotScreen from './screens/ChatBotScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -94,7 +94,9 @@ export default function AppNavigator() {
             <Stack.Screen name="DetailProfile" component={ProfileDetail} />
             <Stack.Screen name="orderhistory" component={OrderHistoryScreen} />
             <Stack.Screen name="DetailOrderScreen" component={DetailOrderScreen} />
-            {/* Thêm các màn hình khác chỉ dành cho người đã đăng nhập ở đây */}
+            <Stack.Screen name="ChatBotScreen" component={ChatBotScreen} />
+            
+           
           </>
         ) : (
           // Nếu CHƯA ĐĂNG NHẬP, chỉ hiển thị màn hình Login và SignUp
