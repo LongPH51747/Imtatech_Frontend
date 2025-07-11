@@ -4,7 +4,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import CheckBox from '@react-native-community/checkbox';
 import { remove } from "../../redux/actions/cartAction"
 import { useAuth } from "../../context/AuthContext";
-const BASE_URL = 'http://localhost:3000';
+import { BASE_URL } from '../../api';
+
 
 const CartItem = ({ item }) => {
     const {

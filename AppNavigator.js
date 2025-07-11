@@ -22,6 +22,10 @@ import CheckoutScreen from './screens/checkout/CheckoutScreen';
 import ProfileDetail from './screens/ProfileDetail';
 import OrderHistoryScreen from './screens/orderhistory/orderHistoryScreen';
 import DetailOrderScreen from './screens/orderhistory/detailorder';
+import AddressScreen from './screens/address/addressScreens';
+import AddAddressScreen from './screens/address/addAddressScreen';
+import UpdateAddressScreen from './screens/address/UpdateAddressScreen';
+
 
 
 const Stack = createStackNavigator();
@@ -94,6 +98,9 @@ export default function AppNavigator() {
             <Stack.Screen name="DetailProfile" component={ProfileDetail} />
             <Stack.Screen name="orderhistory" component={OrderHistoryScreen} />
             <Stack.Screen name="DetailOrderScreen" component={DetailOrderScreen} />
+            <Stack.Screen name="AddressScreen" component={AddressScreen} />
+            <Stack.Screen name="AddAddressScreen" component={AddAddressScreen} />
+            <Stack.Screen name="UpdateAddress" component={UpdateAddressScreen} />
             {/* Thêm các màn hình khác chỉ dành cho người đã đăng nhập ở đây */}
           </>
         ) : (

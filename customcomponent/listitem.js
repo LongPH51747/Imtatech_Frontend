@@ -1,45 +1,42 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { BASE_URL } from "../api";
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
 const ITEM_WIDTH = width / numColumns - 24;
 
-const API_BASE_URL = 'https://6144-2405-4802-473-7f0-e5ec-22b8-6085-8361.ngrok-free.app';
 
 const getImageSource = (img) => {
   if (!img) {
     return require('../img/placeholder.webp');
   }
-  
+
   if (typeof img === 'string') {
     if (img.startsWith('/uploads_product/')) {
-      return { uri: `${API_BASE_URL}${img}` };
+      return { uri: `${BASE_URL}${img}` };
     }
     if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:image')) {
       return { uri: img };
     }
   }
-  
+
   return require('../img/placeholder.webp');
 };
 
 const ListItem = ({ plant, onPress }) => {
   const imageSource = getImageSource(plant.image);
-  
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      <Image 
-        source={imageSource} 
-        style={styles.image} 
+      <Image
+        source={imageSource}
+        style={styles.image}
         resizeMode="cover"
         defaultSource={require('../img/placeholder.webp')}
       />
       <Text style={styles.price}>{plant.price?.toLocaleString('vi-VN')}đ</Text>
       <Text style={styles.name} numberOfLines={2}>{plant.name_Product || plant.name}</Text>
-      <TouchableOpacity style={styles.heart}>
-        <Text style={styles.heartIcon}>♡</Text>
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
