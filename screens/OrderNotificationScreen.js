@@ -13,70 +13,88 @@ import {
   Dimensions,
   StatusBar,
 } from 'react-native';
-import {ORDER_GET_BY_USER_API, API_BASE_URL} from '../config/api';
+import {useAuth} from '../context/AuthContext';
+import {apiGetOrdersByUser, BASE_URL} from '../api';
 
 const {width, height} = Dimensions.get('window');
 
-const Notification = () => {
+const OrderNotificationScreen = ({navigation}) => {
+  const {user} = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // UserID từ dữ liệu thực tế
-  const userId = '68633e54628e8c899e05f51b';
-
   const fetchNotifications = async () => {
+    // Lấy user ID từ AuthContext
+    const userId = user?._id || user?.id;
+    
+    if (!userId) {
+      console.error('❌ Không tìm thấy user ID');
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('📦 Fetching orders for userId:', userId);
 
-      // Lấy đơn hàng của user cụ thể
-      const orderResponse = await fetch(`${ORDER_GET_BY_USER_API}/${userId}`);
-      const orders = await orderResponse.json();
-
-      console.log('📦 Orders fetched for userId:', userId);
+      // Sử dụng API function đã có
+      const response = await apiGetOrdersByUser(userId);
+      console.log('📊 API Response:', response);
+      
+      const orders = response || [];
       console.log('📊 Total orders:', orders.length);
+
+      // Kiểm tra structure của orders
+      if (orders.length > 0) {
+        console.log('🔍 Sample order structure:', orders[0]);
+      }
 
       // Tạo notifications từ products trong các đơn hàng
       const cartNotifications = [];
       orders.forEach(order => {
         console.log('🔍 Processing order:', order._id);
+        console.log('Order items:', order.orderItems);
 
-        order.orderItems.forEach((item, index) => {
-          cartNotifications.push({
-            id: `order_${order._id}_item_${item._id}`,
-            type: 'cart',
-            title: '🛒 Sản phẩm đã đặt',
-            subtitle: item.name_product,
-            description: `Size: ${item.size.trim()} - SL: ${
-              item.quantity
-            } - ${formatPrice(item.unit_price_item)}`,
-            image: `${API_BASE_URL}${item.image}`,
-            timestamp: new Date(order.createdAt),
-            // Thông tin đơn hàng
-            orderId: order._id,
-            orderStatus: order.status,
-            orderTotal: order.total_amount,
-            shipping: order.shipping,
-            subTotal: order.sub_total_amount,
-            // Thông tin sản phẩm
-            productId: item.id_product,
-            quantity: item.quantity,
-            unitPrice: item.unit_price_item,
-            totalPrice: item.total_price_item,
-            size: item.size.trim(),
-            category: item.cate_name,
-            // Thông tin địa chỉ
-            customerName: order.id_address.fullName,
-            customerAddress: order.id_address.addressDetail,
-            customerPhone: order.id_address.phone_number,
-            // User info
-            userId: order.userId,
-            createdAt: order.createdAt,
-            updatedAt: order.updatedAt,
+        if (order.orderItems && Array.isArray(order.orderItems)) {
+          order.orderItems.forEach((item, index) => {
+            cartNotifications.push({
+              id: `order_${order._id}_item_${item._id || index}`,
+              type: 'cart',
+              title: '🛒 Sản phẩm đã đặt',
+              subtitle: item.name_product || item.productName || 'Sản phẩm',
+              description: `Size: ${(item.size || '').trim()} - SL: ${
+                item.quantity
+              } - ${formatPrice(item.unit_price_item || item.price)}`,
+              image: item.image ? `${BASE_URL}${item.image}` : null,
+              timestamp: new Date(order.createdAt),
+              // Thông tin đơn hàng
+              orderId: order._id,
+              orderStatus: order.status,
+              orderTotal: order.total_amount,
+              shipping: order.shipping || 0,
+              subTotal: order.sub_total_amount,
+              // Thông tin sản phẩm
+              productId: item.id_product || item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unit_price_item || item.price,
+              totalPrice: item.total_price_item || (item.quantity * (item.unit_price_item || item.price)),
+              size: (item.size || '').trim(),
+              category: item.cate_name || item.category,
+              // Thông tin địa chỉ (có thể null)
+              customerName: order.id_address?.fullName || order.customerName || user?.name || 'N/A',
+              customerAddress: order.id_address?.addressDetail || order.customerAddress || 'N/A',
+              customerPhone: order.id_address?.phone_number || order.customerPhone || 'N/A',
+              // User info
+              userId: order.userId || userId,
+              createdAt: order.createdAt,
+              updatedAt: order.updatedAt,
+            });
           });
-        });
+        }
       });
 
       // Sắp xếp theo thời gian (mới nhất trước)
@@ -86,9 +104,14 @@ const Notification = () => {
 
       setNotifications(allNotifications);
       console.log('✅ Total notifications created:', allNotifications.length);
+      
+      if (allNotifications.length > 0) {
+        console.log('📋 Sample notification:', allNotifications[0]);
+      }
     } catch (error) {
       console.error('❌ Lỗi khi lấy thông báo:', error);
-      Alert.alert('Lỗi', 'Không thể tải thông báo');
+      console.error('Error details:', error.message);
+      Alert.alert('Lỗi', 'Không thể tải thông báo đơn hàng');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,9 +119,10 @@ const Notification = () => {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -106,6 +130,7 @@ const Notification = () => {
   };
 
   const formatPrice = price => {
+    if (!price) return '0 ₫';
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
@@ -191,7 +216,9 @@ const Notification = () => {
               {/* Product Image & Name */}
               <View style={styles.productSection}>
                 <Image
-                  source={{uri: selectedItem.image}}
+                  source={{
+                    uri: selectedItem.image || 'https://via.placeholder.com/80'
+                  }}
                   style={styles.modalProductImage}
                 />
                 <View style={styles.productInfo}>
@@ -395,7 +422,7 @@ const Notification = () => {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.loadingText}>🔄 Đang tải thông báo...</Text>
-        <Text style={styles.userIdText}>👤 User ID: {userId}</Text>
+        <Text style={styles.userIdText}>👤 User ID: {user?._id || user?.id || 'N/A'}</Text>
       </View>
     );
   }
@@ -403,8 +430,17 @@ const Notification = () => {
   if (notifications.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.header}>🔔 Thông báo</Text>
-        <Text style={styles.userIdHeader}>👤 User: {userId}</Text>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>🔔 Thông báo đơn hàng</Text>
+          <View style={styles.headerRight} />
+        </View>
+        <Text style={styles.userIdHeader}>👤 User: {user?._id || user?.id || 'N/A'}</Text>
         <View style={styles.centerContainer}>
           <Text style={styles.emptyIcon}>🛒</Text>
           <Text style={styles.emptyTitle}>Chưa có đơn hàng nào</Text>
@@ -418,8 +454,17 @@ const Notification = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🔔 Thông báo</Text>
-      <Text style={styles.userIdHeader}>👤 User: {userId}</Text>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>🔔 Thông báo đơn hàng</Text>
+        <View style={styles.headerRight} />
+      </View>
+      <Text style={styles.userIdHeader}>👤 User: {user?._id || user?.id || 'N/A'}</Text>
       <Text style={styles.statsHeader}>
         📊 {notifications.length} sản phẩm từ{' '}
         {new Set(notifications.map(n => n.orderId)).size} đơn hàng
@@ -442,19 +487,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    paddingTop: 40,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  backButton: {
+    padding: 8,
+  },
+  backButtonText: {
     fontSize: 24,
+    color: '#007AFF',
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
     color: '#333',
+  },
+  headerRight: {
+    width: 40,
   },
   userIdHeader: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 5,
+    marginVertical: 5,
     color: '#666',
     fontFamily: 'monospace',
   },
@@ -791,4 +854,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Notification;
+export default OrderNotificationScreen; 
