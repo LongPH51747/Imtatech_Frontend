@@ -1,3 +1,4 @@
+// CheckoutScreen.js
 import React, { useEffect, useState } from 'react';
 import {
     View,
@@ -7,13 +8,12 @@ import {
     Alert,
     ScrollView,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { getAddressByUser } from '../../redux/actions/addressAction';
 import { createOrder } from '../../redux/actions/oderAction';
-import { removeAllItems } from '../../redux/actions/cartAction';
+import { removeAllItems } from '../../redux/actions/cartAction'; // hoặc đường dẫn đúng với project bạn
 
 const CheckoutScreen = () => {
     const { user } = useAuth();
@@ -37,7 +37,6 @@ const CheckoutScreen = () => {
     }, [addressList]);
 
     const selectedItems = cartItems.filter((item) => item.status);
-    console.log(selectedItems)
     const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const total = subtotal + SHIPPING_FEE;
 
@@ -80,32 +79,22 @@ const CheckoutScreen = () => {
         <ScrollView style={styles.container}>
             <Text style={styles.sectionTitle}>Thông tin khách hàng</Text>
             {defaultAddress ? (
-                <TouchableOpacity
-                    style={styles.addressContainer}
-                    onPress={() => { navigation.navigate('AddressScreen') }}
-                >
-                    <View style={styles.iconWrap}>
-                        <Ionicons name="location-sharp" size={24} color="#e74c3c" />
-                    </View>
-                    <View style={styles.addressInfo}>
-                        <View style={styles.row}>
-                            <Text style={styles.name}>{defaultAddress.fullName}</Text>
-                        </View>
-                        <Text style={styles.phone}>{defaultAddress.phone_number}</Text>
-                        <Text style={styles.detail}>{defaultAddress.addressDetail}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
+                <View style={styles.box}>
+                    <Text style={styles.label}>{defaultAddress.fullName}</Text>
+                    <Text style={styles.subText}>{user.email}</Text>
+                    <Text style={styles.subText}>{defaultAddress.addressDetail}</Text>
+                    <Text style={styles.subText}>{defaultAddress.phone_number}</Text>
+                </View>
             ) : (
-                <TouchableOpacity onPress={() => { navigation.navigate('AddressScreen') }}>
-                    <Text style={styles.errorText}>Chưa có địa chỉ. Vui lòng cập nhật.</Text>
-                </TouchableOpacity>
+                <Text style={styles.errorText}>
+                    Chưa có địa chỉ. Vui lòng cập nhật.
+                </Text>
             )}
 
             <Text style={styles.sectionTitle}>Sản phẩm đã chọn</Text>
             {selectedItems.map((item) => (
                 <View key={item._id} style={styles.itemBox}>
-                    <Text style={styles.itemName}>{item.name_product}</Text>
+                    <Text style={styles.itemName}>{item.name}</Text>
                     <Text style={styles.subText}>
                         Số lượng: {item.quantity} | Đơn giá: {item.price.toLocaleString('vi-VN')}đ
                     </Text>
@@ -146,53 +135,23 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 8,
     },
+    box: {
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 6,
+        backgroundColor: '#f8f8f8',
+    },
+    label: {
+        fontWeight: 'bold',
+    },
+    subText: {
+        fontSize: 14,
+        color: '#555',
+    },
     errorText: {
         color: 'red',
         fontStyle: 'italic',
-    },
-    addressContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#fefefe',
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        alignItems: 'center',
-    },
-    iconWrap: {
-        marginRight: 12,
-    },
-    addressInfo: {
-        flex: 1,
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    name: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginRight: 8,
-    },
-    defaultTag: {
-        backgroundColor: '#fdecea',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    defaultText: {
-        fontSize: 12,
-        color: '#e74c3c',
-    },
-    phone: {
-        color: '#555',
-        fontSize: 14,
-    },
-    detail: {
-        color: '#333',
-        fontSize: 14,
-        marginTop: 2,
     },
     itemBox: {
         marginBottom: 12,
@@ -205,10 +164,6 @@ const styles = StyleSheet.create({
     itemName: {
         fontWeight: 'bold',
         fontSize: 15,
-    },
-    subText: {
-        fontSize: 14,
-        color: '#555',
     },
     totalBox: {
         marginTop: 16,

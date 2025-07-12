@@ -28,6 +28,10 @@ import AddAddressScreen from './screens/address/addAddressScreen';
 import UpdateAddressScreen from './screens/address/UpdateAddressScreen';
 
 
+import NotificationScreen from './screens/NotificationScreen';
+import AddressManagementScreen from './screens/AddressManagementScreen';
+import OrderNotificationScreen from './screens/OrderNotificationScreen';
+import EditUser from './screens/EditUser';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -106,6 +110,13 @@ export default function AppNavigator() {
             <Stack.Screen name="AddAddressScreen" component={AddAddressScreen} />
             <Stack.Screen name="UpdateAddress" component={UpdateAddressScreen} />
             {/* Thêm các màn hình khác chỉ dành cho người đã đăng nhập ở đây */}
+            <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+            <Stack.Screen name="AddressManagementScreen" component={AddressManagementScreen} />
+            <Stack.Screen name="OrderNotificationScreen" component={OrderNotificationScreen} />
+            <Stack.Screen name="EditUser" component={EditUser} />
+            <Stack.Screen name='ChatBot' component={ChatBotScreen}/>
+            
+           
           </>
         ) : (
           // Nếu CHƯA ĐĂNG NHẬP, chỉ hiển thị màn hình Login và SignUp

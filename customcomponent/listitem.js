@@ -21,7 +21,6 @@ const getImageSource = (img) => {
       return { uri: img };
     }
   }
-
   return require('../img/placeholder.webp');
 };
 

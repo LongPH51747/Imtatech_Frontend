@@ -15,6 +15,7 @@ import moment from 'moment';
 import { useAuth } from '../../context/AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { BASE_URL } from '../../api';
 
 const tabs = ['Tất cả', 'Chờ xác nhận', 'Đang vận chuyển', 'Đã nhận', 'Đã huỷ'];
 
@@ -56,7 +57,7 @@ const OrderHistoryScreen = () => {
                     </Text>
                     <View style={styles.itemRow}>
                         <Image
-                            source={{ uri: `http://your-server-url${orderItem.image}` }}
+                            source={{ uri: `${BASE_URL}${orderItem.image}` }}
                             style={styles.image}
                         />
                         <View style={styles.itemDetails}>

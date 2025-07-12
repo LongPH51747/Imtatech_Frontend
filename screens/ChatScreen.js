@@ -181,7 +181,6 @@ const ChatScreen = () => {
           value={text}
           onChangeText={setText}
         />
-
         <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
           <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>

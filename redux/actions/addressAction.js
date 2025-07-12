@@ -1,5 +1,6 @@
 import { apiCreateAddress, apiDeleteAddress, apiGetAddressesByUser, apiUpdateAddress, apiUpdateAddressDefault } from '../../api';
-import { setAddresses, addAddress, updateAddress, removeAddress } from '../reducers/addressReducer';
+import { addAddress, removeAddress, setAddresses, updateAddress } from '../reducers/addressReducer';
+
 
 export const getAddressByUser = (userId) => async (dispatch) => {
     try {
