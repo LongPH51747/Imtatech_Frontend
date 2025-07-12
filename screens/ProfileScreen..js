@@ -51,6 +51,7 @@ const ProfileScreen = ({ navigation }) => {
 
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>Chung</Text>
+                <Item title="Địa chỉ nhận hàng" onPress={() => { navigation.navigate('AddressScreen') }} />
                 <Item title="Xem thông tin" onPress={() => { navigation.replace('DetailProfile'); }} />
                 <Item title="Cẩm nang trồng cây" onPress={() => { }} />
                 <Item title="Đơn hàng của bạn" onPress={() => { navigation.navigate('orderhistory') }} />

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const BASE_URL = 'http://172.20.10.2:5000'; // Thay bằng URL backend thật
+export const BASE_URL = 'https://8d7690bee745.ngrok-free.app'; // Thay bằng URL backend thật
 
 ;
 
@@ -144,12 +144,47 @@ export const apiCreateOder = async (data) => {
     throw new Error(error?.error || error?.message);
   }
 }
+
 export const apiGetOrdersByUser = async (userId) => {
   try {
     const res = await axios.get(`${BASE_URL}/api/order/getByUserId/${userId}`);
-    console.log("đây là res apigetorder", res.data)
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Lỗi khi lấy đơn hàng');
   }
 };
+
+export const apiCreateAddress = async (id, data) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/api/address/create/userId/${id}`, data)
+    return res && res.data
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Lỗi khi thêm địa chỉ');
+
+  }
+}
+export const apiUpdateAddressDefault = async (id, data) => {
+  try {
+    const res = await axios.patch(`${BASE_URL}/api/address/update/is_default/${id}`, data)
+    return res && res.data
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Lỗi khi cập nhập default địa chỉ")
+  }
+}
+export const apiUpdateAddress = async (id, data) => {
+  try {
+    console.log(data)
+    const res = await axios.put(`${BASE_URL}/api/address/update/${id}`, data)
+    return res && res.data
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Lỗi khi cập nhập địa chỉ")
+  }
+}
+export const apiDeleteAddress = async (id) => {
+  try {
+    const res = await axios.delete(`${BASE_URL}/api/address/deleteAddress/${id}`)
+    return res && res.data
+  } catch (error) {
+    throw new Error(error?.response ? data?.message : error?.message || "Lỗi khi xóa địa chỉ")
+  }
+}

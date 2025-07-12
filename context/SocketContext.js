@@ -17,6 +17,7 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const { token } = useAuth(); // Lấy token từ AuthContext
+  
 
   useEffect(() => {
     // --- DEBUG: In ra token mỗi khi nó thay đổi ---
@@ -28,7 +29,10 @@ export const SocketProvider = ({ children }) => {
       
       const newSocket = io(BASE_URL, {
         query: { token },
-        transports: ['websocket'] // Thêm dòng này để kết nối ổn định hơn, tránh các lỗi fallback
+        transports: ['websocket', 'polling'], // Thêm dòng này để kết nối ổn định hơn, tránh các lỗi fallback
+        reconnectionAttempts: 5,
+        timeout: 20000,
+        
       });
 
       // --- DEBUG: In ra đối tượng socket vừa được tạo ---
