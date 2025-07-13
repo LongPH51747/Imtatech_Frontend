@@ -1,18 +1,19 @@
-import React from 'react';
-import {SafeAreaView, StatusBar, StyleSheet} from 'react-native';
-import Notification from './src/screens/Notification';
-
-function App(): React.JSX.Element {
+import { StyleSheet } from 'react-native'
+import React from 'react'
+import AppNavigator from './AppNavigator'
+import { AuthProvider } from './context/AuthContext'
+import { SocketProvider } from './context/SocketContext'
+const App = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <Notification />
-    </SafeAreaView>
-  );
+    <AuthProvider>
+      <SocketProvider>
+        <AppNavigator />
+      </SocketProvider>
+      
+    </AuthProvider>
+  )
 }
 
-const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#fff'},
-});
+export default App
 
-export default App;
+const styles = StyleSheet.create({})
