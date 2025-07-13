@@ -96,7 +96,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="MainTab" component={MainTab} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-            <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
+            <Stack.Screen name="SearchResultsScreen" component={SearchResultsScreen} />
             <Stack.Screen name="Cart" component={CartScreen} />
             <Stack.Screen name="Detail" component={ProductDetailScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -22,6 +22,7 @@ import { BASE_URL, apiFindOrCreateChat, apiGetMessagesByRoom } from '../api';
 const ChatScreen = () => {
   const { user, token } = useAuth();
   const socket = useSocket();
+  const flatListRef = useRef(null);
 
   const [room, setRoom] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -43,7 +44,11 @@ const ChatScreen = () => {
         }
 
         const resMsgs = await apiGetMessagesByRoom(chatRoom._id, token);
-        setMessages(resMsgs.data.messages);
+        // Sắp xếp tin nhắn theo thời gian tăng dần (cũ nhất lên đầu)
+        const sortedMessages = resMsgs.data.messages.sort((a, b) => 
+          new Date(a.createdAt) - new Date(b.createdAt)
+        );
+        setMessages(sortedMessages);
       } catch (err) {
         console.error('Lỗi init:', err);
       } finally {
@@ -56,19 +61,45 @@ const ChatScreen = () => {
   // Lắng nghe tin nhắn mới
   useEffect(() => {
     if (!socket || !room) return;
+    
     const handleNewMsg = (data) => {
+      console.log('Nhận tin nhắn mới:', data);
       const newMsg = data.message;
       if (newMsg.chatRoomId === room._id) {
-        setMessages((prev) => [newMsg, ...prev]);
+        setMessages((prev) => {
+          // Thêm tin nhắn mới vào cuối mảng
+          const updatedMessages = [...prev, newMsg];
+          // Sắp xếp lại theo thời gian
+          return updatedMessages.sort((a, b) => 
+            new Date(a.createdAt) - new Date(b.createdAt)
+          );
+        });
+        
+        // Tự động scroll xuống tin nhắn mới nhất
+        setTimeout(() => {
+          if (flatListRef.current) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }, 100);
       }
     };
+
     socket.on('new:message', handleNewMsg);
-    return () => socket.off('new:message', handleNewMsg);
+    
+    // Thêm listener cho tin nhắn ảnh
+    socket.on('new:image-message', handleNewMsg);
+    
+    return () => {
+      socket.off('new:message', handleNewMsg);
+      socket.off('new:image-message', handleNewMsg);
+    };
   }, [socket, room]);
 
   // Gửi text
   const handleSend = () => {
     if (!text.trim() || !socket || !room) return;
+    
+    console.log('Gửi tin nhắn text:', text);
     socket.emit('send:message', {
       chatRoomId: room._id,
       receiverId: room.admin._id,
@@ -80,43 +111,42 @@ const ChatScreen = () => {
 
   // Gửi ảnh
   const handleSendImage = async () => {
-  try {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-    });
-    if (result.didCancel) return;
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
 
-    const file = result.assets[0];
-    const formData = new FormData();
-    formData.append('image', {
-      uri: file.uri,
-      name: file.fileName || `photo.jpg`,
-      type: file.type,
-    });
+      const file = result.assets[0];
+      const formData = new FormData();
+      formData.append('image', {
+        uri: file.uri,
+        name: file.fileName || `photo.jpg`,
+        type: file.type,
+      });
 
-    const res = await axios.post(`${BASE_URL}/api/upload-image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await axios.post(`http://localhost:5000/api/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const imageUrl = res.data.imageUrl;
+      const imageUrl = res.data.imageUrl;
+      console.log('Upload ảnh thành công:', imageUrl);
 
-    // 👇 EMIT ĐÚNG TÊN EVENT
-    socket.emit('send:image-message', {
-      chatRoomId: room._id,
-      receiverId: room.admin._id,
-      imageUrl: imageUrl,
-    });
+      // Gửi tin nhắn ảnh
+      socket.emit('send:image-message', {
+        chatRoomId: room._id,
+        receiverId: room.admin._id,
+        imageUrl: imageUrl,
+      });
 
-  } catch (err) {
-    console.error('Lỗi gửi ảnh:', err);
-  }
-};
-
-
+    } catch (err) {
+      console.error('Lỗi gửi ảnh:', err);
+    }
+  };
 
   const renderMessageItem = ({ item }) => {
     const isMyMsg = item.sender._id === user._id;
@@ -135,8 +165,9 @@ const ChatScreen = () => {
         >
           {item.messageType === 'image' ? (
             <Image
-              source={{ uri: item.mediaUrl }}
+              source={{ uri: item.mediaUrl || item.imageUrl }}
               style={{ width: 200, height: 200, borderRadius: 10 }}
+              resizeMode="cover"
             />
           ) : (
             <Text style={isMyMsg ? styles.myMessageText : styles.otherMessageText}>
@@ -144,6 +175,12 @@ const ChatScreen = () => {
             </Text>
           )}
         </View>
+        <Text style={styles.timeText}>
+          {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Text>
       </View>
     );
   };
@@ -163,11 +200,19 @@ const ChatScreen = () => {
       keyboardVerticalOffset={80}
     >
       <FlatList
+        ref={flatListRef}
         data={messages}
         renderItem={renderMessageItem}
         keyExtractor={(item) => item._id}
         style={styles.messageList}
-        inverted
+        // Bỏ inverted để hiển thị đúng thứ tự
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => {
+          // Tự động scroll xuống cuối khi có tin nhắn mới
+          if (flatListRef.current && messages.length > 0) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }}
       />
 
       <View style={styles.inputContainer}>
@@ -180,7 +225,9 @@ const ChatScreen = () => {
           placeholder="Nhập tin nhắn..."
           value={text}
           onChangeText={setText}
+          multiline
         />
+
         <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
           <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>
@@ -198,11 +245,23 @@ const styles = StyleSheet.create({
   messageContainer: { marginVertical: 5 },
   myMessageContainer: { alignItems: 'flex-end' },
   otherMessageContainer: { alignItems: 'flex-start' },
-  messageBubble: { paddingVertical: 10, paddingHorizontal: 15, borderRadius: 20, maxWidth: '80%' },
+  messageBubble: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 15, 
+    borderRadius: 20, 
+    maxWidth: '80%',
+    marginBottom: 2
+  },
   myMessageBubble: { backgroundColor: '#007AFF' },
   otherMessageBubble: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e0e0e0' },
   myMessageText: { color: '#fff' },
   otherMessageText: { color: '#000' },
+  timeText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
+    marginHorizontal: 5
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,11 +272,13 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    height: 40,
+    minHeight: 40,
+    maxHeight: 100,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 20,
     paddingHorizontal: 15,
+    paddingVertical: 10,
     backgroundColor: '#f0f0f0',
   },
   sendButton: {

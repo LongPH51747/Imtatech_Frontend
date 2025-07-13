@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const BASE_URL = 'https://3c23700d5553.ngrok-free.app'; // Thay bằng URL backend thật
+export const BASE_URL = 'https://8bbadc0e5099.ngrok-free.app'; // Thay bằng URL backend thật
 
 ;
 
